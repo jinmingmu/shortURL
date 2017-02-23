@@ -1,15 +1,13 @@
 import os
 import sqlite3
 from encode.base import encode, decode
-from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
+from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash, abort
 app = Flask(__name__)
 
 app.config.update(dict(
     DATABASE=os.path.join(app.root_path, 'flaskr.db'),
     DEBUG=True,
     SECRET_KEY='development key',
-    USERNAME='admin',
-    PASSWORD='password'
 ))
 
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
@@ -49,39 +47,41 @@ def initdb_command():
     init_db()
     print('Initialized the database.')
     
-@app.route('/')
-def show_entries():
-    db = get_db()
-    cur = db.execute('select * from URLTable')
-    entries = cur.fetchall()
-    return render_template('show_entries.html', entries=entries)
-
-
-@app.route('/add/<longurl>')
-def add_entry(longurl):
-    db = get_db()
-    contents = db.execute('select * from URLTable where longURL=(?)',
+@app.route('/', methods=['POST'])
+def add_entry():
+    if request.headers['Content-Type'] == 'text/plain':
+        longurl = request.data
+        db = get_db()
+        contents = db.execute('select * from URLTable where longURL=(?)',
                  [longurl])
+        content = contents.fetchall()
+        if(len(content) > 0):
+            id = content[0][0]
+            counter = content[0][2]
+            db.execute('update URLTable set counter = (?) where longURL=(?)',[counter + 1, longurl])
+        else:
+            db.execute('insert into URLTable (longURL, counter) values(?,?)',[longurl, 0])
+            id = db.execute('select id from URLTable where longURL=(?)',[longurl]).fetchall()[0][0]
+        db.commit()
+    else:
+        print "please send post request with text/plain content type"
+    return url_for('add_entry',_external=True) + encode(id)
+
+
+@app.route('/<hashValue>')
+def parseURL(hashValue):
+    entryId = decode(hashValue)
+    db = get_db()
+    contents = db.execute('select * from URLTable where id=(?)',
+                 [entryId])
     content = contents.fetchall()
     if(len(content) > 0):
-        id = content[0][0]
+        longURL = content[0][1]
         counter = content[0][2]
-        db.execute('update URLTable set counter = (?) where longURL=(?)',
-                 [counter + 1, longurl])
+        db.execute('update URLTable set counter = (?) where id=(?)',[counter + 1, entryId])
+        return longURL 
     else:
-        db.execute('insert into URLTable (longURL, counter) values(?,?)',
-                 [longurl, 0])
-        id = db.execute('select id from URLTable where longURL=(?)',
-                 [longurl]).fetchall()[0][0]
-    db.commit()
-    flash(encode(int(id)))
-    return redirect(url_for('show_entries'))
-
-
-@app.route('/parse/<shortHash>')
-def parseURL(shortHash):
-    db = get_db()
-    return redirect(url_for('show_entries'))
+        abort(404)
 
 if __name__ == '__main__':
     app.run()
