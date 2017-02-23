@@ -1,7 +1,8 @@
 import os
 import sqlite3
-from encode.base import encode, decode
+from encode.base import *
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash, abort
+import re
 app = Flask(__name__)
 
 app.config.update(dict(
@@ -47,29 +48,49 @@ def initdb_command():
     init_db()
     print('Initialized the database.')
     
-@app.route('/', methods=['POST'])
-def add_entry():
-    if request.headers['Content-Type'] == 'text/plain':
-        longurl = request.data
-        db = get_db()
-        contents = db.execute('select * from URLTable where longURL=(?)',
-                 [longurl])
-        content = contents.fetchall()
-        if(len(content) > 0):
-            id = content[0][0]
-            counter = content[0][2]
-            db.execute('update URLTable set counter = (?) where longURL=(?)',[counter + 1, longurl])
-        else:
-            db.execute('insert into URLTable (longURL, counter) values(?,?)',[longurl, 0])
-            id = db.execute('select id from URLTable where longURL=(?)',[longurl]).fetchall()[0][0]
-        db.commit()
+@app.route('/')
+def postCenter():
+    addLongURL = request.args.get('add')
+    print addLongURL
+    if(addLongURL != None and isValidURL(addLongURL)):
+        return addLongUrl(addLongURL)
+
+    countLongURL = request.args.get('count')
+    print countLongURL
+    if(countLongURL != None and isValidURL(countLongURL)):
+        return getCounter(countLongURL)
+
+    abort(404)
+
+def addLongUrl(longURL):
+    db = get_db()
+    contents = db.execute('select * from URLTable where longURL=(?)',[longURL])
+    content = contents.fetchall()
+    if(len(content) > 0):
+        id = content[0][0]
     else:
-        print "please send post request with text/plain content type"
-    return url_for('add_entry',_external=True) + encode(id)
+        db.execute('insert into URLTable (longURL, counter) values(?,?)',[longURL, 0])
+        id = db.execute('select id from URLTable where longURL=(?)',[longURL]).fetchall()[0][0]
+        db.commit()
+    return url_for('postCenter',_external=True) + encode(id)
 
-
+def getCounter(longURL):
+    db = get_db()
+    contents = db.execute('select counter from URLTable where longURL=(?)',[longURL])
+    db.commit()
+    content = contents.fetchall()
+    print content
+    if(len(content) > 0):
+        return str(content[0][0])
+    else:
+        return '0'
+    
+    
 @app.route('/<hashValue>')
 def parseURL(hashValue):
+    for char in hashValue:
+        if(char not in BASE62):
+            abort(404)
     entryId = decode(hashValue)
     db = get_db()
     contents = db.execute('select * from URLTable where id=(?)',
@@ -79,9 +100,16 @@ def parseURL(hashValue):
         longURL = content[0][1]
         counter = content[0][2]
         db.execute('update URLTable set counter = (?) where id=(?)',[counter + 1, entryId])
-        return longURL 
+        db.commit()
+        return redirect(longURL)  
     else:
         abort(404)
+
+def isValidURL(url):
+    if re.match(r'^https?:/{2}\w.+$', url):
+        return True
+    else:
+        return False
 
 if __name__ == '__main__':
     app.run()
