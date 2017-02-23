@@ -51,7 +51,6 @@ def initdb_command():
 @app.route('/')
 def main_page():
     addLongURL = request.args.get('add')
-    print addLongURL
     if(addLongURL != None and is_valid_URL(addLongURL)):
         shortURL = add_longUrl(addLongURL)
         response = jsonify(
@@ -93,7 +92,6 @@ def get_counter(longURL):
     contents = db.execute('select counter from URLTable where longURL=(?)',[longURL])
     db.commit()
     content = contents.fetchall()
-    print content
     if(len(content) > 0):
         return str(content[0][0])
     else:
