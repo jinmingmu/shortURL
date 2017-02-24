@@ -150,4 +150,5 @@ def is_valid_URL(url):
 
 
 if __name__ == '__main__':
+    initdb_command()
     app.run(host='0.0.0.0', debug=True, port=80)

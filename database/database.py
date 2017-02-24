@@ -3,7 +3,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 ## Direct database mode and location
-engine = create_engine('mysql+mysqldb://root@localhost/test', convert_unicode=True)
+engine = create_engine('sqlite:///foo.db', convert_unicode=True)
 ## Default database session setting
 db_session = scoped_session(sessionmaker(autocommit=False,
                                          autoflush=False,

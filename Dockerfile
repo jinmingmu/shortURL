@@ -10,4 +10,4 @@ RUN git checkout docker-short
 
 RUN pip install sqlalchemy
 
-RUN export FLASK_APP=main.py && export FLASK_DEBUG=1 && flask run
+#RUN export FLASK_APP=main.py && export FLASK_DEBUG=1 && flask run
