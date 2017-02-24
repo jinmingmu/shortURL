@@ -10,4 +10,6 @@ RUN git checkout docker-short
 
 RUN pip install sqlalchemy
 
+RUN python -c 'import database.database;database.database.init_db()' 
+
 #RUN export FLASK_APP=main.py && export FLASK_DEBUG=1 && flask run
