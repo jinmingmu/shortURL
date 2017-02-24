@@ -7,10 +7,4 @@ WORKDIR "/app"
 
 RUN git checkout docker-short \
 
-	&& pip install sqlalchemy \
-
-	&& python -c 'import database.database;database.database.init_db()' \
-	
-	&& apt-get install mysql-server \
-	
-	&& pip install mysql
+	&& pip install -r requirements.txt
