@@ -3,7 +3,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 ## Direct database mode and location
-engine = create_engine('mysql+pymysql://root:admin@localhost:3306/foo', convert_unicode=True)
+engine = create_engine('mysql+pymysql://root:admin@172.17.0.2:3306/foo', convert_unicode=True)
 ## Default database session setting
 db_session = scoped_session(sessionmaker(autocommit=False,
                                          autoflush=False,

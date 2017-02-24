@@ -7,8 +7,6 @@ go to my git directory
 
 command: docker build -t short .
 
-command: docker run -d --name mycontainer -p 80:80 short
-
 command: docker run --name mysqlcontainer -e MYSQL_ROOT_PASSWORD=admin -d mysql
 
 command: docker exec -it mysqlcontainer bash
@@ -24,7 +22,7 @@ enter exit
 enter exit
 
 
-command: docker run --name tempcontainer --link mysqlcontainer:mysql -d mycontainer
+command: docker run --name mycontainer -p 80:80 --link mysqlcontainer:mysql -d short 
 
 command: docker exec -it mycontainer bash
 
