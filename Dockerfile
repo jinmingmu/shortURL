@@ -1,15 +1,16 @@
 FROM tiangolo/uwsgi-nginx-flask:flask
 
 RUN rm -r /app
-
 RUN git clone https://github.com/jinmingmu/shortURL.git /app 
 
 WORKDIR "/app"
 
-RUN git checkout docker-short
+RUN git checkout docker-short \
 
-RUN pip install sqlalchemy
+	&& pip install sqlalchemy \
 
-RUN python -c 'import database.database;database.database.init_db()' 
-
-#RUN export FLASK_APP=main.py && export FLASK_DEBUG=1 && flask run
+	&& python -c 'import database.database;database.database.init_db()' \
+	
+	&& apt-get install mysql-server \
+	
+	&& pip install mysql
