@@ -7,7 +7,6 @@ import re
 app = Flask(__name__)
 ## The configuration of this app
 app.config.update(dict(
-    #DATABASE=os.path.join(app.root_path, 'flaskr.db'),
     DEBUG=True,
     SECRET_KEY='development key',
 ))
@@ -44,6 +43,13 @@ def main_page():
     if your request is add or counter, it will return a json file with requested data
     otherwise it will return status code 400 with error message
     """
+    ## Only allow one command each time 
+    if(len(request.args) > 1):
+        return jsonify(
+                status=400,
+                error='Bad request'
+                )
+
     addLongURL = request.args.get('add')
     if(addLongURL != None and is_valid_URL(addLongURL)):
         shortURL = add_longURL(addLongURL)

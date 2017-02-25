@@ -2,8 +2,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-## Direct database mode and location
-engine = create_engine('mysql+mysqldb://root@localhost/test', convert_unicode=True)
+## Default database mode and location
+dataBaseSetting = 'mysql+pymysql://root@localhost/test'
+engine = create_engine(dataBaseSetting, convert_unicode=True)
 ## Default database session setting
 db_session = scoped_session(sessionmaker(autocommit=False,
                                          autoflush=False,
