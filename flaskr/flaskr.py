@@ -108,7 +108,7 @@ def get_counter(longURL):
     """
     content = URLTable.query.filter(URLTable.longURL == longURL).first()
     if(content != None):
-        return content.counter
+        return str(content.counter)
     else:
         return '0'
     

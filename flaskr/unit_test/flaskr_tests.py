@@ -23,18 +23,16 @@ class FlaskrTestCase( TestCase):
         db_session.remove()
         self.engine = create_engine('sqlite:///:memory:')
         db_session.configure(bind=self.engine)
-        metadata = MetaData()
-        self.url = Table('URLTable',metadata, Column('id', Integer, primary_key=True),Column('longURL', String(300)),Column('counter',Integer))
-        metadata.create_all(self.engine)
-        self.url = URLTable("http://www.test.com", 0)
-        db_session.add(self.url)
-        db_session.commit()
+        self.metadata = MetaData()
+        testTable = Table('URLTable',self.metadata, Column('id', Integer, primary_key=True),Column('longURL', String(300)),Column('counter',Integer))
+        self.metadata.create_all(self.engine)
         
         flaskr.app.config['TESTING'] = True
         self.app = flaskr.app.test_client()
 
     def tearDown(self):
         db_session.remove()
+        self.metadata.drop_all(self.engine)
 
 
     def test_access_main_page(self):
@@ -45,11 +43,49 @@ class FlaskrTestCase( TestCase):
         assert 400 == result.get('status')
 
           
-    def test_add_long_url_not_int_data_base(self):
+    def test_add_long_url_not_in_data_base(self):
         longURL = 'http://www.test.com'
         rv = self.app.get('/?add=' + longURL)
         assert '200 OK' == rv.status
         result = json.loads(rv.data)
+        assert 'localhost/1' in result.get('shortURL')
+        assert 200 == result.get('status')
+
+
+    def test_add_long_url_in_data_base(self):
+        longURL1 = 'http://www.test.com'
+        tempURL = URLTable(longURL1, 100)
+        db_session.add(tempURL)
+        longURL2 = 'http://www.otherURLAddress'
+        tempURL = URLTable(longURL2, 1)
+        db_session.add(tempURL)
+        db_session.commit()
+        rv = self.app.get('/?add=' + longURL1)
+        assert '200 OK' == rv.status
+        result = json.loads(rv.data)
+        assert 'localhost/1' in result.get('shortURL')
+        assert 200 == result.get('status')
+
+
+    def test_get_long_url_counter_in_data_base(self):
+        longURL = 'http://www.test.com'
+        tempURL = URLTable(longURL, 5)
+        db_session.add(tempURL)
+        db_session.commit()
+        rv = self.app.get('/?counter=' + longURL)
+        assert '200 OK' == rv.status
+        result = json.loads(rv.data)
+        assert '5' == result.get('counter')
+        assert 200 == result.get('status')
+
+
+    def test_get_long_url_counter_not_in_data_base(self):
+        longURL = 'http://www.test.com'
+        rv = self.app.get('/?counter=' + longURL)
+        assert '200 OK' == rv.status
+        result = json.loads(rv.data)
+        assert '0' == result.get('counter')
+        assert 200 == result.get('status')
 
 if __name__ == '__main__':
     unittest.main()
