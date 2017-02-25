@@ -34,3 +34,5 @@
 
 * docker容器的链接问题，需要两个容器通信，ip如何得到，最后用docker -inspect container 得到ip。
 
+* python 2.7 site package有时因为path没有设定好无法加载，需要在.bash_profile里面加入 
+  <pre>export PYTHONPATH=$PYTHONPATH:/usr/local/lib/python2.7/site-packages</pre>
