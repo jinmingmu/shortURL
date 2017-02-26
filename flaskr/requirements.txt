@@ -3,3 +3,4 @@ Flask==0.12
 virtualenv==15.1.0
 PyMySQL==0.7.10
 enum==0.4.6
+enum34==1.0
