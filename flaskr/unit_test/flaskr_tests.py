@@ -13,7 +13,7 @@ from database.models import URLTable
 from sqlalchemy import *
 from sqlalchemy.ext.declarative import declarative_base
 
-class FlaskrTestCase( TestCase):
+class FlaskrTestCase(TestCase):
     def create_app(self):
         app = Flask(__name__)
         app.config['TESTING'] = True
@@ -37,16 +37,23 @@ class FlaskrTestCase( TestCase):
 
     def test_access_main_page(self):
         rv = self.app.get('/')
-        assert '200 OK' == rv.status
+        assert 200 == rv.status_code
         result = json.loads(rv.data)
         assert 'Bad request' in result.get('error')
         assert 400 == result.get('status')
 
+    def test_multiple_web_request(self):
+        longURL = 'http://www.test.com'
+        rv = self.app.get('/?add=%s&counter=%s' % (longURL, longURL))
+        assert 200 == rv.status_code
+        result = json.loads(rv.data)
+        assert 'Bad request' in result.get('error')
+        assert 400 == result.get('status')
           
     def test_add_long_url_not_in_data_base(self):
         longURL = 'http://www.test.com'
         rv = self.app.get('/?add=' + longURL)
-        assert '200 OK' == rv.status
+        assert 200 == rv.status_code
         result = json.loads(rv.data)
         assert 'localhost/1' in result.get('shortURL')
         assert 200 == result.get('status')
@@ -61,10 +68,19 @@ class FlaskrTestCase( TestCase):
         db_session.add(tempURL)
         db_session.commit()
         rv = self.app.get('/?add=' + longURL1)
-        assert '200 OK' == rv.status
+        assert 200 == rv.status_code
         result = json.loads(rv.data)
         assert 'localhost/1' in result.get('shortURL')
         assert 200 == result.get('status')
+
+
+    def test_add_long_url_with_invalid_url(self):
+        longURL= 'h[]a;dkosaf'
+        rv = self.app.get('/?add=' + longURL)
+        assert 200 == rv.status_code
+        result = json.loads(rv.data)
+        assert 'Bad request' in result.get('error')
+        assert 400 == result.get('status')
 
 
     def test_get_long_url_counter_in_data_base(self):
@@ -86,6 +102,32 @@ class FlaskrTestCase( TestCase):
         result = json.loads(rv.data)
         assert '0' == result.get('counter')
         assert 200 == result.get('status')
+
+
+    def test_get_long_url_with_invalid_url(self):
+        longURL = '[]<>.//a;'
+        rv = self.app.get('/?counter=' + longURL)
+        assert 200 == rv.status_code
+        result = json.loads(rv.data)
+        assert 'Bad request' in result.get('error')
+        assert 400 == result.get('status')
+
+    def test_redirect_with_long_url_in_data_base(self):
+        longURL = 'http://www.test.com'
+        tempURL = URLTable(longURL, 5)
+        db_session.add(tempURL)
+        db_session.commit()
+        rv = self.app.get('/1')
+        assert 302 == rv.status_code
+        assert longURL == rv.location
+
+    def test_redirect_with_long_url_not_in_data_base(self):
+        rv = self.app.get('/A')
+        assert 404 == rv.status_code
+
+    def test_redirect_with_invalid_hash_code(self):
+        rv = self.app.get('/[]')
+        assert 404 == rv.status_code
 
 if __name__ == '__main__':
     unittest.main()
