@@ -38,3 +38,6 @@
 * 如果无法初始化表格，遇到ip error那么说明mysqlcontainer容器的ip不是我这里的默认ip或端口：172.17.0.2:3306 
 我们需要用<pre>docker inspect --format '{{ .NetworkSettings.IPAddress }}' mysqlcontainer</pre>去查看mysqlcontainer的ip，然后修改database/database.py 里面的代码去连接mysql
 这个问题未来需要改变为动态取得ip
+
+## 服务不中断性
+* 我的部署并没有达到服务不中断性，因为没有时间去研究wUSGI的配置。我的思路是配置uWSGI去用多台服务器来启动服务，当一个服务正在部署或者无法服务的时候把请求发送至另一台服务器。只有所有服务器无法运行那么服务才会中断。应该是一个负载平衡的设置。
