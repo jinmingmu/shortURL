@@ -32,7 +32,9 @@
 
 * mysql在window下环境设置出错，在mac下也出现各种路径问题，查找了很多资料最后解决了
 
-* docker容器的链接问题，需要两个容器通信，ip如何得到，最后用docker -inspect container 得到ip。
+* docker容器的链接问题，需要两个容器通信，ip如何得到，最后用docker -inspect container 得到ip
 
 * python 2.7 site package有时因为path没有设定好无法加载，需要在.bash_profile里面加入 
   <pre>export PYTHONPATH=$PYTHONPATH:/usr/local/lib/python2.7/site-packages</pre>
+  
+* Unit test 的时候临时数据库的设置浪费了很多时间，还有mock模块的使用，最后用了flask_testing模块
