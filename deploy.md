@@ -11,16 +11,9 @@ command: docker run --name mysqlcontainer -e MYSQL_ROOT_PASSWORD=admin -d mysql
 
 command: docker exec -it mysqlcontainer bash
 
-command: mysql -u root -p
+command: mysql -u root -e "create database foo" -p
 
 enter: admin
-
-enter: CREATE DATABASE foo
-
-enter exit
-
-enter exit
-
 
 command: docker run --name mycontainer -p 80:80 --link mysqlcontainer:mysql -d short 
 
