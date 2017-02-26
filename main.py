@@ -4,15 +4,21 @@ from encode.base import *
 from flask import Flask, request, session, redirect, url_for, abort, jsonify
 from database.models import URLTable
 import re
+from enum import Enum
+
+class status(Enum):
+    status_200 = 200
+    status_400 = 400
+
 app = Flask(__name__)
-## The configuration of this app
+
+# The configuration of this app
 app.config.update(dict(
-    #DATABASE=os.path.join(app.root_path, 'flaskr.db'),
     DEBUG=True,
     SECRET_KEY='development key',
 ))
 
-## Run app in silence mode
+# Run app in silence mode
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
 
@@ -20,7 +26,7 @@ app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 def shutdown_session(exception=None):
     """
     @fn shutdown_session
-    remove the database session
+    Remove the database session
     """
     db_session.remove()
 
@@ -29,7 +35,7 @@ def shutdown_session(exception=None):
 def initdb_command():
     """
     @fn initdb_command
-    init the database, you can run flask command initdb to run this function
+    Init the database, you can run flask command initdb to run this function
     """
     init_db()
     print('Initialized the database.')
@@ -39,16 +45,24 @@ def initdb_command():
 def main_page():
     """
     @fn main_page
-    handle add and counter request
+    Handle add and counter request
     @return response
-    if your request is add or counter, it will return a json file with requested data
-    otherwise it will return status code 400 with error message
+    If your request is add or counter, it will return a json file with requested data
+    Otherwise it will return status code 400 with error message
+    If you have more than one request, it will return status code 400 with error message
     """
+    # Only allow one command each time
+    if(len(request.args) > 1):
+        return jsonify(
+                status=status.status_400.value,
+                error='Bad request'
+                )
+
     addLongURL = request.args.get('add')
     if(addLongURL != None and is_valid_URL(addLongURL)):
         shortURL = add_longURL(addLongURL)
         response = jsonify(
-            status=200,
+            status=status.status_200.value,
             shortURL=shortURL,
             mimetype='application/json'
         )
@@ -58,14 +72,14 @@ def main_page():
     if(countLongURL != None and is_valid_URL(countLongURL)):
         counter = get_counter(countLongURL)
         response = jsonify(
-            status=200,
+            status=status.status_200.value,
             counter=counter,
             mimetype='application/json'
         )
         return response
 
     return jsonify(
-        status=400,
+        status=status.status_400.value,
         error='Bad request'
         )
 
@@ -73,11 +87,12 @@ def main_page():
 def add_longURL(longURL):
     """
     @fn add_longURL
-    add the longURL to database if it is not in database.
+    Add the longURL to database and then return the short URL address
+    If the longURL is already in database, return the short URL address
     @param longURL
-    the url string
+    The long URL string
     @return
-    the short url web address
+    The short URL web address
     """
     content = URLTable.query.filter(URLTable.longURL == longURL).first()
     if(content != None):
@@ -93,16 +108,16 @@ def add_longURL(longURL):
 def get_counter(longURL):
     """
     @fn get_counter
-    get the longURL counter from database.
+    Get the longURL counter from database. If it is not in database, return 0
     @param longURL
-    the url string
+    The long url string
     @return
-    value of counter if it is in database
+    Value of counter if it is in database
     0 if it is not in database
     """
     content = URLTable.query.filter(URLTable.longURL == longURL).first()
     if(content != None):
-        return content.counter
+        return str(content.counter)
     else:
         return '0'
     
@@ -111,13 +126,14 @@ def get_counter(longURL):
 def parse_URL(hashValue):
     """
     @fn parse_URL
-    check whether hash is valid, then get the id from database. If the id is in database, redirect to longURL.
+    Redirect to the long URL address base on hash value
+    If id is in database, redirect to longURL.
     If id is not in database or input is invalid, abort 404
     @param hashValue
-    the hashed address value
+    The hashed long URL value
     @return
-    redirect the website to longURL if it is in database
-    abort 404 is it is not in database
+    Redirect the website to longURL if it is in database
+    Abort 404 if it is not in database
     """
     for char in hashValue:
         if(char not in BASE62):
@@ -136,9 +152,9 @@ def parse_URL(hashValue):
 def is_valid_URL(url):
     """
     @fn is_valid_URL
-    use regular expression to check whether input url is valid
+    Use simple regular expression to check whether input URL is valid
     @param url
-    url string
+    URL string
     @return
     True if it is valid
     False if it is not valid
@@ -150,5 +166,4 @@ def is_valid_URL(url):
 
 
 if __name__ == '__main__':
-    initdb_command()
     app.run(host='0.0.0.0', debug=True, port=80)
