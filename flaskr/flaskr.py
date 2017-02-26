@@ -4,9 +4,8 @@ from encode.base import *
 from flask import Flask, request, session, redirect, url_for, abort, jsonify
 from database.models import URLTable
 import re
-from enum import Enum
 
-class status(Enum):
+class status():
     status_200 = 200
     status_400 = 400
 
@@ -54,7 +53,7 @@ def main_page():
     # Only allow one command each time
     if(len(request.args) > 1):
         return jsonify(
-                status=status.status_400.value,
+                status=status.status_400,
                 error='Bad request'
                 )
 
@@ -62,7 +61,7 @@ def main_page():
     if(addLongURL != None and is_valid_URL(addLongURL)):
         shortURL = add_longURL(addLongURL)
         response = jsonify(
-            status=status.status_200.value,
+            status=status.status_200,
             shortURL=shortURL,
             mimetype='application/json'
         )
@@ -72,14 +71,14 @@ def main_page():
     if(countLongURL != None and is_valid_URL(countLongURL)):
         counter = get_counter(countLongURL)
         response = jsonify(
-            status=status.status_200.value,
+            status=status.status_200,
             counter=counter,
             mimetype='application/json'
         )
         return response
 
     return jsonify(
-        status=status.status_400.value,
+        status=status.status_400,
         error='Bad request'
         )
 
